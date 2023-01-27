@@ -1,15 +1,24 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[CreateAssetMenu(fileName = "Parameters",menuName = "LOS/New Parameters",order = 1)]
 public class LineOfSightParameters : ScriptableObject
 {
-    [Range(0, 10000)] internal float viewRange;
+    public DetectionTypeDistance enviromentDetection;
+    public DetectionTypeDistance[] entityDetectionRanges;
 
-    [Range(0, 360)] public float horizontalAngle;
-    [Range(0, 360)] internal int verticalAngle;
+    [Range(5, 180)] public float horizontalAngle = 30;
+    [Range(5, 180)] public int verticalAngle = 30;
+    [Range(1, 100)] public float zoomFactor = 1;
 
-    internal float noiseRadius;
-    internal float noiseMinDistance;
-    internal float visualError;
+    [Range(.5f, 1f)] public float visualError = .9f;
+}
+
+[Serializable]
+public class DetectionTypeDistance
+{
+    public LayerMask layer;
+    [Range(0, 1000)] public float distance;
 }

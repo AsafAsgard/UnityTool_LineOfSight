@@ -6,12 +6,12 @@ public class CentricMesh3D : MeshDrawer
 {
     public override void Draw(Transform refTransform, LineOfSightParameters parameters)
     {
-
+        mesh.Clear();
         
         float verticalAngle = parameters.verticalAngle;
         float horizontalAngle = parameters.horizontalAngle;
 
-        float maxViewDistance = parameters.enviromentDetection.distance;
+        float maxViewDistance = 50;// parameters.enviromentDetection.distance;
 
         int numTriangles = (2 * verticalSegments + 2) * horizontalSegments;
         if (verticalAngle < 90)
@@ -74,10 +74,10 @@ public class CentricMesh3D : MeshDrawer
                 /// Todo: Fix bad performance
                 if (showDetailedScan)
                 {
-                    topLeft = TestPoint(refTransform.position, topLeft, maxViewDistance, parameters.enviromentDetection.layer);
-                    topRight = TestPoint(refTransform.position, topRight, maxViewDistance, parameters.enviromentDetection.layer);
-                    bottomLeft = TestPoint(refTransform.position, bottomLeft, maxViewDistance, parameters.enviromentDetection.layer);
-                    bottomRight = TestPoint(refTransform.position, bottomRight, maxViewDistance, parameters.enviromentDetection.layer);
+                    topLeft = TestPoint(refTransform.position, topLeft, maxViewDistance, 0);// parameters.enviromentDetection.layer);
+                    topRight = TestPoint(refTransform.position, topRight, maxViewDistance, 0);// parameters.enviromentDetection.layer);
+                    bottomLeft = TestPoint(refTransform.position, bottomLeft, maxViewDistance, 0);// parameters.enviromentDetection.layer);
+                    bottomRight = TestPoint(refTransform.position, bottomRight, maxViewDistance, 0);// parameters.enviromentDetection.layer);
                 }
 
                 #region Top Side
@@ -154,5 +154,6 @@ public class CentricMesh3D : MeshDrawer
         mesh.vertices = veritcies;
         mesh.triangles = triangles;
         mesh.uv = uvs;
+        
     }
 }

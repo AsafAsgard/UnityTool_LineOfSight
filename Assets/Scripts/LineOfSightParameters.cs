@@ -6,8 +6,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Parameters",menuName = "LOS/New Parameters",order = 1)]
 public class LineOfSightParameters : ScriptableObject
 {
-    public DetectionTypeDistance enviromentDetection;
-    public DetectionTypeDistance[] entityDetectionRanges;
+    //public DetectionTypeDistance enviromentDetection;
+    //public DetectionTypeDistance[] entityDetectionRanges;
 
     [Range(5, 180)] public float horizontalAngle = 30;
     [Range(5, 180)] public int verticalAngle = 30;

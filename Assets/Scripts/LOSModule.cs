@@ -952,12 +952,6 @@ public class LOSModule : MonoBehaviour
     }
 }
 
-[Serializable]
-public struct POI
-{
-    public string identifier;
-    public Vector3 point;
-}
 
 
 

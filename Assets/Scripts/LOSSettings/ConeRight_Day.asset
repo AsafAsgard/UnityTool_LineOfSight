@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 43933c32746b10d4a832e1fc45dc7bff, type: 3}
-  m_Name: Parameters
+  m_Name: ConeRight_Day
   m_EditorClassIdentifier: 
   targetLayers:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 0
   enviromentLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
-  maxviewDistance: 256
+    m_Bits: 0
+  maxviewDistance: 50
   minviewDistance: 0
-  horizontalAngle: 52
-  verticalAngle: 30
+  horizontalAngle: 120
+  verticalAngle: 40
   zoomFactor: 1
-  visualError: 0
-  subDivision: 4
+  visualError: 0.95
+  subDivision: 3

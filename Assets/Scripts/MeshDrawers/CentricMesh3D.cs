@@ -22,7 +22,6 @@ namespace LOS
                     vertices[i * columns + j] = refTransform.InverseTransformPoint(meshPoints[i, j].ToVector3());
                 }
             }
-
             int index = 0;
             for (int i = 0; i < rows - 1; i++)
             {

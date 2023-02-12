@@ -17,11 +17,11 @@ MonoBehaviour:
     m_Bits: 128
   enviromentLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
-  maxviewDistance: 256
+    m_Bits: 64
+  maxviewDistance: 160
   minviewDistance: 0
-  horizontalAngle: 52
-  verticalAngle: 30
+  horizontalAngle: 60
+  verticalAngle: 25
   zoomFactor: 1
   visualError: 0
   subDivision: 4

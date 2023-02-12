@@ -27,7 +27,6 @@ namespace LOS
         [SerializeField, Tooltip("Control the level of detail of the mesh")]
         [Range(1, 5)]
         public int subDivision = 3;
-
     }
 
 

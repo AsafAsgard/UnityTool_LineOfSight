@@ -63,11 +63,11 @@ namespace LOS
         void Update()
         {
             timeSinceLastScan += Time.deltaTime;
-            if (isScanning || timeSinceLastScan < scanInterval)
-            {
-                timeSinceLastScan = 0;
-                Scan();
-            }
+            if (isScanning || timeSinceLastScan < scanInterval) return;
+
+            timeSinceLastScan = 0;
+            Scan();
+
         }
 
         #region Scan

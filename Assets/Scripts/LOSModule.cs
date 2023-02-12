@@ -10,6 +10,8 @@ using Random = UnityEngine.Random;
 [ExecuteAlways]
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
+
+[Obsolete("Use LineOfSightBaseObject or LineOfSightMeshManager instead", true)]
 public class LOSModule : MonoBehaviour
 {
     public string FieldName { get; } = "LOS";

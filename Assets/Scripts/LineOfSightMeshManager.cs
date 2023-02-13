@@ -17,6 +17,8 @@ namespace LOS
         [SerializeField] private MeshDrawer m_MeshDrawer;
         [SerializeField] private Material m_MeshMaterial;
 
+        public bool enableMesh = true;
+
         private SerializedVector3[,] meshPoints;
         private LineOfSightParameters parameters;
 
@@ -38,7 +40,7 @@ namespace LOS
         private void Update()
         {
             CalculateMeshPoints(parameters);
-            if(meshPoints!=null && m_MeshDrawer != null)
+            if(meshPoints!=null && m_MeshDrawer != null && enableMesh)
                 m_MeshDrawer.Draw(meshPoints);
         }
         private void OnDestroy()
@@ -97,6 +99,8 @@ namespace LOS
 
             return point;
         }
+        #endregion
+
 
         private void OnDrawGizmos()
         {
@@ -104,11 +108,12 @@ namespace LOS
             Gizmos.color = Color.blue;
             foreach (SerializedVector3 point in meshPoints)
             {
+                
                 //Gizmos.DrawLine(transform.position,point.ToVector3());
-                Gizmos.DrawSphere(point.ToVector3(), .05f);
+                Gizmos.DrawSphere(point.ToVector3(), .1f);
             }
         }
-        #endregion
+        
     }
 
 }

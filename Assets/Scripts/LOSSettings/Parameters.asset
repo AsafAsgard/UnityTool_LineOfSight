@@ -18,10 +18,10 @@ MonoBehaviour:
   enviromentLayers:
     serializedVersion: 2
     m_Bits: 64
-  maxviewDistance: 160
+  maxviewDistance: 50
   minviewDistance: 0
-  horizontalAngle: 60
-  verticalAngle: 25
+  horizontalAngle: 43
+  verticalAngle: 24
   zoomFactor: 1
   visualError: 0
-  subDivision: 4
+  subDivision: 3

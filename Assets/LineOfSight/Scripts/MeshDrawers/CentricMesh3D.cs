@@ -1,13 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace LOS
 {
+    [CreateAssetMenu()]
     public class CentricMesh3D : MeshDrawer
     {
-        public override void Draw(SerializedVector3[,] meshPoints)
+        public override void Draw(in Vector3[,] meshPoints)
         {
+            if (mesh == null) return;
             mesh.Clear();
             int rows = meshPoints.GetLength(0);
             int columns = meshPoints.GetLength(1);
@@ -19,7 +22,7 @@ namespace LOS
             {
                 for (int j = 0; j < columns; j++)
                 {
-                    vertices[i * columns + j] = refTransform.InverseTransformPoint(meshPoints[i, j].ToVector3());
+                    vertices[i * columns + j] = refTransform.InverseTransformPoint(meshPoints[i, j]);
                 }
             }
             int index = 0;
@@ -47,9 +50,16 @@ namespace LOS
             mesh.RecalculateNormals();
 
             meshFilter.mesh = mesh;
-
-
-
         }
+        public void OnDrawGizmos()
+        {
+            if (mesh == null) return;
+            Gizmos.color = Color.white;
+            Gizmos.DrawMesh(mesh);
+        }
+
+
     }
+
+    
 }

@@ -6,11 +6,12 @@ using UnityEngine;
 
 namespace LOS
 {
-    [RequireComponent(typeof(MeshFilter))]
-    [RequireComponent(typeof(MeshRenderer))]
+    [ExecuteAlways]
     public abstract class MeshDrawer : ScriptableObject
     {
+        public bool Initialized { get; private set; } = false;
 
+        [SerializeField] private Material useMaterial;
         protected Mesh mesh;
         protected MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
@@ -27,10 +28,12 @@ namespace LOS
 
             meshFilter.sharedMesh = mesh;
             meshRenderer.enabled = true;
+            meshRenderer.material = useMaterial;
 
+            Initialized = true;
         }
 
-        public virtual void Draw(SerializedVector3[,] meshPoints) { }
+        public abstract void Draw(in Vector3[,] meshPoints);
 
 
         private void OnDestroy()
@@ -38,4 +41,5 @@ namespace LOS
             mesh = null;
         }
     }
+
 }

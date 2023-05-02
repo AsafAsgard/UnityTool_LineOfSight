@@ -1,26 +1,23 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using Unity.Burst;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
 using Random = UnityEngine.Random;
-
 namespace LOS
 {
     [ExecuteAlways]
-    public class LineOnSightBaseObject : MonoBehaviour
+    [RequireComponent(typeof(LineOfSightBase))]
+    public class LineOnSightScanner : MonoBehaviour
     {
         public string FieldName { get; } = "LOS";
 
-        [Header("Appearance")]
-        [SerializeField] public bool centric = true;
-
-        [SerializeField] private LineOfSightParameters parameters;
-        public LineOfSightParameters GetParameters() { return parameters; }
-
         [Header("Scan Options")]
-        [SerializeField] private float scanInterval = 0.02f;
+        [SerializeField] private float scanInterval = 0.5f;
         private float timeSinceLastScan = Mathf.Infinity;
 
 
@@ -30,10 +27,13 @@ namespace LOS
         //[SerializeField] private float errorChance = 0f;
 
         [Header("Debug")]
-        //[SerializeField] public bool enable2dMesh = false;
-        [SerializeField] public bool showTargetLines = false;
+        [SerializeField , Tooltip("There lines will be visible in Game Mode!")] public bool showTargetLines = false;
 
-        //[SerializeField] LineOfSightParameters lineOfSightParameters;
+
+
+        private static List<GameObject> allEntities;
+        private LineOfSightParameters parameters;
+        private bool isScanning = false;
 
         /// <summary>
         /// Debug GL line material
@@ -46,22 +46,43 @@ namespace LOS
         private List<GameObject> poiTargets;
 
 
-        private bool isScanning = false;
 
-
-
-        public List<GameObject> GetTargets() => poiTargets;
+        public List<GameObject> GetTargets() => poiTargets; // TODO get transform position
 
         private void Awake()
         {
+            parameters = GetComponent<LineOfSightBase>().parameters;
             isScanning = false;
-            poiTargets = new List<GameObject>();
+            poiTargets = new();
+            allEntities = new();
             CreateLineMaterial();
         }
 
+        private void Start()
+        {
+            InitializeEntitiesList();
+        }
+
+        public void RefreshEntitiesList()
+        {
+            InitializeEntitiesList();
+        }
+
+        private void InitializeEntitiesList()
+        {
+            allEntities.Clear();
+            if (parameters.detectionLayers == null || parameters.detectionLayers.Count == 0) return;
+            foreach (string tag in parameters.detectionLayers.Select(dl => dl.targetTag))
+            {
+                GameObject[] items = GameObject.FindGameObjectsWithTag(tag);
+                if (items != null)
+                    allEntities.AddRange(items);
+            }
+        }
 
         void Update()
         {
+            if (parameters == null) return;
             timeSinceLastScan += Time.deltaTime;
             if (isScanning || timeSinceLastScan < scanInterval) return;
 
@@ -77,15 +98,25 @@ namespace LOS
         /// Save to poiTargets only the targets that are visible
         /// </summary>
         [ContextMenu("Scan")]
+        [BurstCompile]
         private void Scan()
         {
             isScanning = true;
-
-            //Get targets in range
-            GameObject[] pois = Physics.OverlapSphere(transform.position, parameters.maxviewDistance, parameters.targetLayers)
-                                        .Select(o => o.gameObject).ToArray();
             poiTargets.Clear();
-            poiTargets = pois.Where(poi => TargetInSight(poi.transform.position)).ToList();
+            //Add targets by tag
+            if(allEntities != null && parameters.detectionLayers != null)
+            {
+                foreach (LayerDetails layerDetail in parameters.detectionLayers)
+                {
+                    IEnumerable<GameObject> targetsInLayer = allEntities.Where(target => target.tag.Equals(layerDetail.targetTag));
+                    IEnumerable<GameObject> targetsInRange = targetsInLayer.Where(entity => Vector3.Distance(transform.position, entity.transform.position) <= layerDetail.distance);
+                    IEnumerable<GameObject> layerPOI = targetsInRange.Where(poi => TargetInSight(poi.transform));
+                    poiTargets.AddRange(layerPOI);
+                }
+            }
+
+            if (poiTargets.Contains(parameters.root))
+                poiTargets.Remove(parameters.root);
             isScanning = false;
         }
 
@@ -97,23 +128,39 @@ namespace LOS
         /// </remarks>
         /// <param name="targetPos"></param>
         /// <returns></returns>
-        private bool TargetInSight(Vector3 targetPos)
+        private bool TargetInSight(Transform target)            
         {
+            Vector3 targetPoistion;
+            if (transform.TryGetComponent(out Collider col))
+            {
+                targetPoistion = col.bounds.center;
+            }
+            else
+            {
+                targetPoistion = target.position;
+            }
             //Can be seen
-            if (Physics.Linecast(transform.position, targetPos, parameters.enviromentLayers)) return false;
+            
+            if (Physics.Linecast(transform.position, targetPoistion, parameters.enviromentLayers)) return false;
 
             //Validate angles
-            Quaternion angleToTarget = Quaternion.FromToRotation(transform.forward, targetPos - transform.position);
+            Quaternion angleToTarget = Quaternion.FromToRotation(transform.forward, targetPoistion - transform.position);
 
-            float targetHorizontalAngle = angleToTarget.eulerAngles.y;
-            if (targetHorizontalAngle > 180)
-                targetHorizontalAngle -= 360;
-            float targetVerticalAngle = angleToTarget.eulerAngles.x;
-            if (targetVerticalAngle > 180)
-                targetVerticalAngle -= 360;
-            if (Mathf.Abs(targetHorizontalAngle) > parameters.horizontalAngle) return false;
-            if (Mathf.Abs(targetVerticalAngle) > parameters.verticalAngle) return false;
+            if(parameters.horizontalAngle < 180)
+            {
+                float targetHorizontalAngle = angleToTarget.eulerAngles.y;
+                if (targetHorizontalAngle > 180)
+                    targetHorizontalAngle -= 360;
+                if (Mathf.Abs(targetHorizontalAngle) > parameters.horizontalAngle) return false;
 
+            }
+            if(parameters.verticalAngle < 90)
+            {
+                float targetVerticalAngle = angleToTarget.eulerAngles.x;
+                if (targetVerticalAngle > 180)
+                    targetVerticalAngle -= 360;
+                if (Mathf.Abs(targetVerticalAngle) > parameters.verticalAngle) return false;
+            }
             return true;
 
         }
@@ -126,7 +173,7 @@ namespace LOS
                 return Vector3.zero;
             else
             {
-                float radius = noiseRadius * distanceToTarget / parameters.maxviewDistance;
+                float radius = noiseRadius * distanceToTarget / parameters.maxViewDistance;
 
                 Vector2 noise = Random.insideUnitCircle * radius;
                 return new Vector3(noise.x, 0, noise.y); // should return the correct point
@@ -187,7 +234,6 @@ namespace LOS
             poiTargets = null;
             lineMaterial = null;
         }
-
 
     }
 }

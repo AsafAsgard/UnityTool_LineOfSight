@@ -51,7 +51,8 @@ namespace LOS
 
         private void Awake()
         {
-            parameters = GetComponent<LineOfSightBase>().parameters;
+            LineOfSightBase lineOfSightBase = GetComponent<LineOfSightBase>();
+            parameters = lineOfSightBase.parameters;
             isScanning = false;
             poiTargets = new();
             allEntities = new();

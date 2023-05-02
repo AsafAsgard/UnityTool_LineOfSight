@@ -18,6 +18,6 @@ public class LineOfSightParameters : ScriptableObject
     [Range(5, 90)] public int verticalAngle = 30;
 
     [SerializeField, Tooltip("Control the level of detail of the mesh")]
-    [Range(1, 5)]
+    [Range(1, 10)]
     public int subDivision = 3;
 }

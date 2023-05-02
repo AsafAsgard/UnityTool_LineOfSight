@@ -22,7 +22,7 @@ public class LineOfSightBase : MonoBehaviour
     [SerializeField] [Range(5, 180)] private float horizontalAngle = 30;
     [SerializeField] [Range(5, 90)] private int verticalAngle = 30;
     [SerializeField, Tooltip("Control the level of detail of the mesh")]
-    [Range(1, 5)]
+    [Range(1, 10)]
     private int subDivision = 3;
 
     //[Range(.5f, 1f)] private float visualError = .9f;
@@ -35,7 +35,6 @@ public class LineOfSightBase : MonoBehaviour
 
     [Header("Shared Paramenters")]
     public LineOfSightParameters parameters;
-
 
     private List<ISightModule> modules = new();
 

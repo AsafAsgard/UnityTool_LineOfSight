@@ -18,7 +18,6 @@ namespace LOS
         [SerializeField] private MeshDrawer meshDrawer;
         private LineOfSightParameters parameters;
         private int segmentResolution = 4;
-
         private float deltaHorizontalAngle;
         private float deltaVerticalAngle;
 
@@ -30,7 +29,8 @@ namespace LOS
 
         private void Awake()
         {
-            parameters = GetComponent<LineOfSightBase>().parameters;
+            LineOfSightBase lineOfSightBase = GetComponent<LineOfSightBase>();
+            parameters = lineOfSightBase.parameters;
         }
         private void Start()
         {
@@ -56,10 +56,10 @@ namespace LOS
         }
         private void InitMeshData()
         {
-            meshDrawer?.Init(transform);
             InitMeshVerticiesArray();
             _raycastCommands = new NativeArray<RaycastCommand>(segmentResolution * segmentResolution, Allocator.Persistent);
             _raycastHits = new NativeArray<RaycastHit>(segmentResolution * segmentResolution, Allocator.Persistent);
+
 
             deltaHorizontalAngle = (parameters.horizontalAngle * 2) / segmentResolution;
             deltaVerticalAngle = (parameters.verticalAngle * 2) / segmentResolution;
@@ -67,9 +67,15 @@ namespace LOS
 
         }
 
+        public void AssignDrawer(MeshDrawer newDrawer)
+        {
+            meshDrawer = newDrawer;
+            meshDrawer.Init(transform);
+        }
         private void Update()
         {
             InitMeshData();
+
             UpdateMatrix();
         }
 
@@ -81,8 +87,7 @@ namespace LOS
 
         private void DrawMesh()
         {
-            if (MeshPoints == null) return;
-            if (meshDrawer == null) return;
+            if (MeshPoints == null || meshDrawer == null) return;
             if (!meshDrawer.Initialized)
                 meshDrawer.Init(transform);
             meshDrawer.Draw(MeshPoints);
@@ -91,6 +96,7 @@ namespace LOS
         private void InitMeshVerticiesArray()
         {
             segmentResolution = 4 * parameters.subDivision;
+            MeshPoints = null;
             MeshPoints = new Vector3[segmentResolution, segmentResolution];
         }
         #region Logic

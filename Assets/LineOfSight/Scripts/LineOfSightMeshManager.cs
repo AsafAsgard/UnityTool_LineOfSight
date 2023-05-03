@@ -37,6 +37,7 @@ namespace LOS
             if (parameters != null)
             {
                 InitMeshData();
+                AssignDrawer();
             }
         }
         private void OnDestroy()
@@ -56,25 +57,27 @@ namespace LOS
         }
         private void InitMeshData()
         {
-            InitMeshVerticiesArray();
-            _raycastCommands = new NativeArray<RaycastCommand>(segmentResolution * segmentResolution, Allocator.Persistent);
-            _raycastHits = new NativeArray<RaycastHit>(segmentResolution * segmentResolution, Allocator.Persistent);
+            segmentResolution = 4 * parameters.subDivision;
 
+            if (_raycastCommands != null)  _raycastCommands.Dispose();
+            if(_raycastHits != null) _raycastHits.Dispose();
 
-            deltaHorizontalAngle = (parameters.horizontalAngle * 2) / segmentResolution;
-            deltaVerticalAngle = (parameters.verticalAngle * 2) / segmentResolution;
-            queryParameters.layerMask = parameters.enviromentLayers;
+            _raycastCommands = new NativeArray<RaycastCommand>((segmentResolution + 1) * (segmentResolution+1), Allocator.Persistent);
+            _raycastHits = new NativeArray<RaycastHit>((segmentResolution + 1) * (segmentResolution + 1), Allocator.Persistent);
+
+            MeshPoints = new Vector3[segmentResolution + 1, segmentResolution+1];
+
 
         }
 
-        public void AssignDrawer(MeshDrawer newDrawer)
+        public void AssignDrawer()
         {
-            meshDrawer = newDrawer;
+            meshDrawer = Resources.Load<CentricMesh3D>("Drawers/Centric Mesh 3D");
             meshDrawer.Init(transform);
         }
         private void Update()
         {
-            InitMeshData();
+            //InitMeshData();
 
             UpdateMatrix();
         }
@@ -93,12 +96,6 @@ namespace LOS
             meshDrawer.Draw(MeshPoints);
         }
 
-        private void InitMeshVerticiesArray()
-        {
-            segmentResolution = 4 * parameters.subDivision;
-            MeshPoints = null;
-            MeshPoints = new Vector3[segmentResolution, segmentResolution];
-        }
         #region Logic
         /// <summary>
         /// Calculate the mesh outline verticies relative to the position and rotation of the parent object
@@ -112,12 +109,15 @@ namespace LOS
                 return;
             }
 
+            deltaHorizontalAngle = (parameters.horizontalAngle * 2) / segmentResolution;
+            deltaVerticalAngle = (parameters.verticalAngle * 2) / segmentResolution;
+            queryParameters.layerMask = parameters.enviromentLayers;
             float currentVerticalAngle = -parameters.verticalAngle;
 
-            for (int verticalIndex = 0; verticalIndex < segmentResolution; verticalIndex++, currentVerticalAngle += deltaVerticalAngle)
+            for (int verticalIndex = 0; verticalIndex <= segmentResolution; verticalIndex++, currentVerticalAngle += deltaVerticalAngle)
             {
                 float currentHorizontalAngle = -parameters.horizontalAngle;
-                for (int horizontalIndex = 0; horizontalIndex < segmentResolution; horizontalIndex++, currentHorizontalAngle += deltaHorizontalAngle)
+                for (int horizontalIndex = 0; horizontalIndex <= segmentResolution; horizontalIndex++, currentHorizontalAngle += deltaHorizontalAngle)
                 {
                     Vector3 direction = (Quaternion.AngleAxis(currentHorizontalAngle, transform.up) * Quaternion.AngleAxis(currentVerticalAngle, transform.right)) * transform.forward;
 

@@ -35,9 +35,6 @@ public class LineOfSightBase : MonoBehaviour
 
     [Header("Shared Paramenters")]
     public LineOfSightParameters parameters;
-
-    private List<ISightModule> modules = new();
-
     private void Awake()
     {
         parameters = ScriptableObject.CreateInstance<LineOfSightParameters>();
@@ -62,7 +59,6 @@ public class LineOfSightBase : MonoBehaviour
     }
 
 
-    #region Modules
     private void OnValidate()
     {
         parameters.root = root;
@@ -75,20 +71,7 @@ public class LineOfSightBase : MonoBehaviour
         parameters.subDivision = subDivision;
     }
 
-    private void UpdateModules()
-    {
-        foreach (ISightModule module in modules)
-        {
-            module.UpdateParameters();
-        }
-    }
-    internal void Register(ISightModule module)
-    {
-        if(modules.Contains(module)) return;
-        modules.Add(module);
-    }
 
-    #endregion
 }
 [Serializable]
 public class LayerDetails

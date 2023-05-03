@@ -8,12 +8,11 @@ public class LineOfSightParameters : ScriptableObject
     [SerializeField] public GameObject root;
 
     [Header("What is detectable?")]
-    public List<LayerDetails> detectionLayers = new();
+    public Dictionary<string, float> tagsDictionary = new();
     [SerializeField] public LayerMask enviromentLayers;
 
     [Header("Visual Cone Settings")]
     [Range(0, 1000)] public float maxViewDistance = 10;
-    [Range(0, 1000)] public float minviewDistance = 0;
     [Range(5, 180)] public float horizontalAngle = 30;
     [Range(5, 90)] public int verticalAngle = 30;
 

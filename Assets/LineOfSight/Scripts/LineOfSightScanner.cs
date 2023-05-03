@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace LOS
 {
     [ExecuteAlways]
     [RequireComponent(typeof(LineOfSightBase))]
-    public class LineOnSightScanner : MonoBehaviour
+    public class LineOnSightScanner : MonoBehaviour, ISightModule
     {
         public string FieldName { get; } = "LOS";
 
@@ -27,7 +28,8 @@ namespace LOS
         //[SerializeField] private float errorChance = 0f;
 
         [Header("Debug")]
-        [SerializeField , Tooltip("There lines will be visible in Game Mode!")] public bool showTargetLines = false;
+        [SerializeField , Tooltip("There lines will be visible in Game Mode!")] 
+        public bool showTargetLines = true;
 
 
 
@@ -47,39 +49,36 @@ namespace LOS
 
 
 
-        public List<GameObject> GetTargets() => poiTargets; // TODO get transform position
+        public List<GameObject> GetTargets() => poiTargets;
 
         private void Awake()
         {
             LineOfSightBase lineOfSightBase = GetComponent<LineOfSightBase>();
             parameters = lineOfSightBase.parameters;
+            lineOfSightBase.Register(this);
             isScanning = false;
             poiTargets = new();
-            allEntities = new();
             CreateLineMaterial();
         }
 
         private void Start()
         {
-            InitializeEntitiesList();
+            Initialize();
         }
 
-        public void RefreshEntitiesList()
+        [ContextMenu("Init")]
+        public void Initialize()
         {
-            InitializeEntitiesList();
-        }
-
-        private void InitializeEntitiesList()
-        {
-            allEntities.Clear();
-            if (parameters.detectionLayers == null || parameters.detectionLayers.Count == 0) return;
-            foreach (string tag in parameters.detectionLayers.Select(dl => dl.targetTag))
+            allEntities = new();
+            if (parameters.tagsDictionary == null || parameters.tagsDictionary.Count == 0) return;
+            foreach (string tag in parameters.tagsDictionary.Keys)
             {
                 GameObject[] items = GameObject.FindGameObjectsWithTag(tag);
                 if (items != null)
                     allEntities.AddRange(items);
             }
         }
+
 
         void Update()
         {
@@ -105,19 +104,29 @@ namespace LOS
             isScanning = true;
             poiTargets.Clear();
             //Add targets by tag
-            if(allEntities != null && parameters.detectionLayers != null)
+            if(allEntities != null && parameters.tagsDictionary != null)
             {
-                foreach (LayerDetails layerDetail in parameters.detectionLayers)
+                for (int i = 0; i < allEntities.Count; i++)
                 {
-                    IEnumerable<GameObject> targetsInLayer = allEntities.Where(target => target.tag.Equals(layerDetail.targetTag));
-                    IEnumerable<GameObject> targetsInRange = targetsInLayer.Where(entity => Vector3.Distance(transform.position, entity.transform.position) <= layerDetail.distance);
-                    IEnumerable<GameObject> layerPOI = targetsInRange.Where(poi => TargetInSight(poi.transform));
-                    poiTargets.AddRange(layerPOI);
+                    GameObject entity = allEntities[i];
+
+                    if (entity == parameters.root) continue;
+                    if (!parameters.tagsDictionary.Keys.Contains(entity.tag)) continue;
+                    if (Vector3.Distance(transform.position, entity.transform.position) > parameters.tagsDictionary[entity.tag]) continue;
+                    if (TargetInSight(entity.transform))
+                        poiTargets.Add(entity);
                 }
+                //foreach (LayerDetails layerDetail in parameters.detectionLayers)
+                //{
+                //    IEnumerable<GameObject> targetsInLayer = allEntities.Where(target => target.tag.Equals(layerDetail.targetTag));
+                //    IEnumerable<GameObject> targetsInRange = targetsInLayer.Where(entity => Vector3.Distance(transform.position, entity.transform.position) <= layerDetail.distance);
+                //    IEnumerable<GameObject> layerPOI = targetsInRange.Where(poi => TargetInSight(poi.transform));
+                //    poiTargets.AddRange(layerPOI);
+                //}
             }
 
-            if (poiTargets.Contains(parameters.root))
-                poiTargets.Remove(parameters.root);
+            //if (poiTargets.Contains(parameters.root))
+            //    poiTargets.Remove(parameters.root);
             isScanning = false;
         }
 

@@ -12,7 +12,7 @@ namespace LOS
     [RequireComponent(typeof(MeshRenderer))]
     [RequireComponent(typeof(LineOfSightBase))]
 
-    public class LineOfSightMeshManager : MonoBehaviour
+    public class LineOfSightMeshManager : MonoBehaviour, ISightModule
     {
         public Vector3[,] MeshPoints { get; private set; }
         [SerializeField] private MeshDrawer meshDrawer;
@@ -31,12 +31,13 @@ namespace LOS
         {
             LineOfSightBase lineOfSightBase = GetComponent<LineOfSightBase>();
             parameters = lineOfSightBase.parameters;
+            lineOfSightBase.Register(this);
         }
         private void Start()
         {
             if (parameters != null)
             {
-                InitMeshData();
+                Initialize();
                 AssignDrawer();
             }
         }
@@ -49,31 +50,28 @@ namespace LOS
             _raycastHits.Dispose();
         }
 
-
         [ContextMenu("Init")]
-        public void UpdateParameters()
-        {
-            InitMeshData();
-        }
-        private void InitMeshData()
+        public void Initialize()
         {
             segmentResolution = 4 * parameters.subDivision;
 
-            if (_raycastCommands != null)  _raycastCommands.Dispose();
-            if(_raycastHits != null) _raycastHits.Dispose();
+            if (_raycastCommands != null) _raycastCommands.Dispose();
+            if (_raycastHits != null) _raycastHits.Dispose();
 
-            _raycastCommands = new NativeArray<RaycastCommand>((segmentResolution + 1) * (segmentResolution+1), Allocator.Persistent);
+            _raycastCommands = new NativeArray<RaycastCommand>((segmentResolution + 1) * (segmentResolution + 1), Allocator.Persistent);
             _raycastHits = new NativeArray<RaycastHit>((segmentResolution + 1) * (segmentResolution + 1), Allocator.Persistent);
 
-            MeshPoints = new Vector3[segmentResolution + 1, segmentResolution+1];
-
-
+            MeshPoints = new Vector3[segmentResolution + 1, segmentResolution + 1];
         }
+
 
         public void AssignDrawer()
         {
             meshDrawer = Resources.Load<CentricMesh3D>("Drawers/Centric Mesh 3D");
-            meshDrawer.Init(transform);
+            if(meshDrawer != null)
+            {
+                meshDrawer.Init(transform);
+            }
         }
         private void Update()
         {
@@ -175,6 +173,7 @@ _jobHandle.Complete();
                 Gizmos.DrawSphere(point, .1f);
             }
         }
+
 
     }
 

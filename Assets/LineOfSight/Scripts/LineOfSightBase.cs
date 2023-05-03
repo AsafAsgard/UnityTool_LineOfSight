@@ -13,41 +13,48 @@ public class LineOfSightBase : MonoBehaviour
     [SerializeField] private GameObject root;
 
     [Header("What is detectable?")]
-    [SerializeField] private List<LayerDetails> detectionLayers = new();
+    [SerializeField] private List<LayerDetails> detectionTags = new();
     [SerializeField] private LayerMask enviromentLayers;
+    private Dictionary<string, float> tagsDictionary = new();
 
     [Header("Visual Cone Settings")]
     [SerializeField] [Range(0, 1000)] private float maxViewDistance = 10;
-    [SerializeField] [Range(0, 1000)] private float minviewDistance = 0;
-    [SerializeField] [Range(5, 180)] private float horizontalAngle = 30;
+    [SerializeField] [Range(5, 180)] private float horizontalAngle = 60;
     [SerializeField] [Range(5, 90)] private int verticalAngle = 30;
-    [SerializeField, Tooltip("Control the level of detail of the mesh")]
+    [SerializeField, Tooltip("Controls the level of detail of the mesh")]
     [Range(1, 10)]
     private int subDivision = 3;
 
-    //[Range(.5f, 1f)] private float visualError = .9f;
-    //[Range(0, 150)] public float DroneDetectionRadius = 50;
-    //[Range(0, 50)] public float DroneDetectionHeight = 20;
-
-    //[Range(1, 100)] public float zoomFactor = 1;
-
-    //[SerializeField][Range(-1f, 1f)] public float verticalBias = 0;
+    private List<ISightModule> modules = new();
 
     [Header("Shared Paramenters")]
+    [Tooltip("Set a parameters object here to have it shared with other LOS objects.\nLeave empty to generate a new parameters object for this instance.")]
     public LineOfSightParameters parameters;
     private void Awake()
     {
+        CreateLayerDictionary();
+
         parameters = ScriptableObject.CreateInstance<LineOfSightParameters>();
         parameters.root = gameObject;
+        parameters.tagsDictionary = tagsDictionary;
     }
 
-    
+    private void CreateLayerDictionary()
+    {
+        tagsDictionary.Clear();
+        foreach (LayerDetails layer in detectionTags)
+        {
+            if(layer == null) continue;
+            tagsDictionary.Add(layer.targetTag, layer.distance);
+        }
+    }
+
 
     public void SetTagDetectionDistance(string targetTag, float distance)
     {
-        LayerDetails layer = detectionLayers.SingleOrDefault(dl => dl.targetTag.Equals(targetTag));
+        LayerDetails layer = detectionTags.SingleOrDefault(dl => dl.targetTag.Equals(targetTag));
         if(layer == null)
-            detectionLayers.Add(new LayerDetails(targetTag, distance));
+            detectionTags.Add(new LayerDetails(targetTag, distance));
         else
             layer.distance = distance;
         UpdateViewDistance();
@@ -55,23 +62,35 @@ public class LineOfSightBase : MonoBehaviour
 
     private void UpdateViewDistance()
     {
-        maxViewDistance = detectionLayers.Select(dl => dl.distance).ToList().Max();
+        maxViewDistance = detectionTags.Select(dl => dl.distance).ToList().Max();
     }
 
 
     private void OnValidate()
     {
+        CreateLayerDictionary();
         parameters.root = root;
-        parameters.minviewDistance = minviewDistance;
         parameters.maxViewDistance = maxViewDistance;
-        parameters.detectionLayers = detectionLayers;
+        parameters.tagsDictionary = tagsDictionary;
         parameters.enviromentLayers = enviromentLayers;
         parameters.horizontalAngle = horizontalAngle;
         parameters.verticalAngle = verticalAngle;
         parameters.subDivision = subDivision;
     }
 
-
+    public void Register(ISightModule newModule)
+    {
+        if(modules.Contains(newModule)) return;
+        modules.Add(newModule);
+    }
+    [ContextMenu("Initialize All Modules")]
+    public void InitAllModules()
+    {
+        foreach(ISightModule module in modules)
+        {
+            module.Initialize();
+        }
+    }
 }
 [Serializable]
 public class LayerDetails

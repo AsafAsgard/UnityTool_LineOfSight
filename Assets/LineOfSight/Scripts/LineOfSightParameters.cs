@@ -13,8 +13,8 @@ public class LineOfSightParameters : ScriptableObject
 
     [Header("Visual Cone Settings")]
     [Range(0, 1000)] public float maxViewDistance = 10;
-    [Range(5, 180)] public float horizontalAngle = 30;
-    [Range(5, 90)] public int verticalAngle = 30;
+    [Range(0, 360)] public float horizontalAngle = 50;
+    [Range(0, 180)] public float verticalAngle = 30;
 
     [SerializeField, Tooltip("Control the level of detail of the mesh")]
     [Range(1, 10)]

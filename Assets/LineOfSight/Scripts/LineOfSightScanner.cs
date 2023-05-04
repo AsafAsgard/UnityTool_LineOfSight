@@ -47,14 +47,14 @@ namespace LOS
         /// </summary>
         private List<GameObject> poiTargets;
 
+        private LineOfSightBase lineOfSightBase;
 
 
         public List<GameObject> GetTargets() => poiTargets;
 
         private void Awake()
         {
-            LineOfSightBase lineOfSightBase = GetComponent<LineOfSightBase>();
-            parameters = lineOfSightBase.parameters;
+            lineOfSightBase = GetComponent<LineOfSightBase>();
             lineOfSightBase.Register(this);
             isScanning = false;
             poiTargets = new();
@@ -69,13 +69,16 @@ namespace LOS
         [ContextMenu("Init")]
         public void Initialize()
         {
+            if (lineOfSightBase == null)
+                lineOfSightBase = GetComponent<LineOfSightBase>();
+            parameters = lineOfSightBase.parameters;
             allEntities = new();
             if (parameters.tagsDictionary == null || parameters.tagsDictionary.Count == 0) return;
             foreach (string tag in parameters.tagsDictionary.Keys)
             {
                 GameObject[] items = GameObject.FindGameObjectsWithTag(tag);
                 if (items != null)
-                    allEntities.AddRange(items);
+                    allEntities.AddRange(items); 
             }
         }
 
@@ -149,8 +152,8 @@ namespace LOS
             {
                 targetPoistion = target.position;
             }
+
             //Can be seen
-            
             if (Physics.Linecast(transform.position, targetPoistion, parameters.enviromentLayers)) return false;
 
             //Validate angles
@@ -161,7 +164,7 @@ namespace LOS
                 float targetHorizontalAngle = angleToTarget.eulerAngles.y;
                 if (targetHorizontalAngle > 180)
                     targetHorizontalAngle -= 360;
-                if (Mathf.Abs(targetHorizontalAngle) > parameters.horizontalAngle) return false;
+                if (Mathf.Abs(targetHorizontalAngle) > parameters.horizontalAngle/2) return false;
 
             }
             if(parameters.verticalAngle < 90)
@@ -169,7 +172,7 @@ namespace LOS
                 float targetVerticalAngle = angleToTarget.eulerAngles.x;
                 if (targetVerticalAngle > 180)
                     targetVerticalAngle -= 360;
-                if (Mathf.Abs(targetVerticalAngle) > parameters.verticalAngle) return false;
+                if (Mathf.Abs(targetVerticalAngle) > parameters.verticalAngle/2) return false;
             }
             return true;
 

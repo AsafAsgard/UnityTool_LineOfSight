@@ -19,8 +19,8 @@ public class LineOfSightBase : MonoBehaviour
 
     [Header("Visual Cone Settings")]
     [SerializeField] [Range(0, 1000)] private float maxViewDistance = 10;
-    [SerializeField] [Range(5, 180)] private float horizontalAngle = 60;
-    [SerializeField] [Range(5, 90)] private int verticalAngle = 30;
+    [SerializeField] [Range(0, 360)] public float horizontalAngle = 30;
+    [SerializeField] [Range(0, 180)] public float verticalAngle = 30;
     [SerializeField, Tooltip("Controls the level of detail of the mesh")]
     [Range(1, 10)]
     private int subDivision = 3;
@@ -37,8 +37,17 @@ public class LineOfSightBase : MonoBehaviour
         parameters = ScriptableObject.CreateInstance<LineOfSightParameters>();
         parameters.root = gameObject;
         parameters.tagsDictionary = tagsDictionary;
-    }
 
+
+    }
+    private void Start()
+    {
+        foreach (ISightModule module in GetComponents<ISightModule>())
+        {
+            if (modules.Contains(module)) return;
+            modules.Add(module);
+        }
+    }
     private void CreateLayerDictionary()
     {
         tagsDictionary.Clear();
@@ -69,7 +78,9 @@ public class LineOfSightBase : MonoBehaviour
     private void OnValidate()
     {
         CreateLayerDictionary();
-        parameters.root = root;
+        if(root != null) 
+            parameters.root = root;
+
         parameters.maxViewDistance = maxViewDistance;
         parameters.tagsDictionary = tagsDictionary;
         parameters.enviromentLayers = enviromentLayers;
@@ -86,11 +97,23 @@ public class LineOfSightBase : MonoBehaviour
     [ContextMenu("Initialize All Modules")]
     public void InitAllModules()
     {
+        if (modules.Count == 0)
+        {
+            foreach (ISightModule module in GetComponents<ISightModule>())
+            {
+                if (modules.Contains(module)) return;
+                modules.Add(module);
+            }
+        }
+
+        Debug.Log($"Initializing {modules.Count} modules");
         foreach(ISightModule module in modules)
         {
             module.Initialize();
         }
     }
+
+
 }
 [Serializable]
 public class LayerDetails

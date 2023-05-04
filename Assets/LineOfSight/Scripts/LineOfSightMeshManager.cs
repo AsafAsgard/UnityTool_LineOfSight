@@ -25,12 +25,13 @@ namespace LOS
         private NativeArray<RaycastCommand> _raycastCommands;
         private NativeArray<RaycastHit> _raycastHits;
         private JobHandle _jobHandle;
-        QueryParameters queryParameters;
+        private QueryParameters queryParameters;
+
+        private LineOfSightBase lineOfSightBase;
 
         private void Awake()
         {
-            LineOfSightBase lineOfSightBase = GetComponent<LineOfSightBase>();
-            parameters = lineOfSightBase.parameters;
+            lineOfSightBase = GetComponent<LineOfSightBase>();
             lineOfSightBase.Register(this);
         }
         private void Start()
@@ -53,6 +54,11 @@ namespace LOS
         [ContextMenu("Init")]
         public void Initialize()
         {
+            if(lineOfSightBase == null)
+                lineOfSightBase = GetComponent<LineOfSightBase>();
+
+            parameters = lineOfSightBase.parameters;
+
             segmentResolution = 4 * parameters.subDivision;
 
             if (_raycastCommands != null) _raycastCommands.Dispose();
@@ -60,8 +66,10 @@ namespace LOS
 
             _raycastCommands = new NativeArray<RaycastCommand>((segmentResolution + 1) * (segmentResolution + 1), Allocator.Persistent);
             _raycastHits = new NativeArray<RaycastHit>((segmentResolution + 1) * (segmentResolution + 1), Allocator.Persistent);
-
-            MeshPoints = new Vector3[segmentResolution + 1, segmentResolution + 1];
+            if (parameters.horizontalAngle == 0 || parameters.verticalAngle == 0)
+                MeshPoints = null;
+            else
+                MeshPoints = new Vector3[segmentResolution + 1, segmentResolution + 1];
         }
 
 
@@ -105,21 +113,20 @@ namespace LOS
             {
                 _jobHandle.Complete();
                 return;
-            }
-
-            deltaHorizontalAngle = (parameters.horizontalAngle * 2) / segmentResolution;
-            deltaVerticalAngle = (parameters.verticalAngle * 2) / segmentResolution;
+            }              
+            deltaHorizontalAngle = parameters.horizontalAngle / segmentResolution;
+            deltaVerticalAngle = parameters.verticalAngle / segmentResolution;
             queryParameters.layerMask = parameters.enviromentLayers;
-            float currentVerticalAngle = -parameters.verticalAngle;
-
+            
+            float currentVerticalAngle = -parameters.verticalAngle/2;
             for (int verticalIndex = 0; verticalIndex <= segmentResolution; verticalIndex++, currentVerticalAngle += deltaVerticalAngle)
             {
-                float currentHorizontalAngle = -parameters.horizontalAngle;
+                float currentHorizontalAngle = -parameters.horizontalAngle/2;
                 for (int horizontalIndex = 0; horizontalIndex <= segmentResolution; horizontalIndex++, currentHorizontalAngle += deltaHorizontalAngle)
                 {
                     Vector3 direction = (Quaternion.AngleAxis(currentHorizontalAngle, transform.up) * Quaternion.AngleAxis(currentVerticalAngle, transform.right)) * transform.forward;
 
-                    //Debug.DrawRay(transform.position, direction);
+                    Debug.DrawRay(transform.position, direction);
 
                     RaycastCommand raycast = new(
                         from: transform.position,

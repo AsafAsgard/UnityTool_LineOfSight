@@ -135,7 +135,7 @@ namespace LOS
                         distance: parameters.maxViewDistance
                         );
 
-                    _raycastCommands[verticalIndex * segmentResolution + horizontalIndex] = raycast;
+                    _raycastCommands[verticalIndex * segmentResolution + horizontalIndex + verticalIndex] = raycast;
 
                     Vector3 defaultPoint = transform.position + direction.normalized * parameters.maxViewDistance;
                     MeshPoints[verticalIndex, horizontalIndex] = defaultPoint;
@@ -157,13 +157,13 @@ namespace LOS
 _jobHandle.Complete();
             if (!_raycastHits.IsCreated) return;
 
-            for (int v = 0; v < segmentResolution; v++)
+            for (int row = 0; row <= segmentResolution; row++)
             {
-                for (int h = 0; h < segmentResolution; h++)
+                for (int col = 0; col <= segmentResolution; col++)
                 {
-                    RaycastHit hit = _raycastHits[v * segmentResolution + h];
+                    RaycastHit hit = _raycastHits[row * segmentResolution + col + row];
                     if (hit.transform == null) continue;
-                    MeshPoints[v, h] = hit.point;
+                    MeshPoints[row, col] = hit.point + hit.normal*0.01f;
                 }
             }        }
         #endregion

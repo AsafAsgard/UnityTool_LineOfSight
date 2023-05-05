@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6e99af4d48a0264ab860768395a4aeb, type: 3}
   m_Name: Centric Mesh 3D
   m_EditorClassIdentifier: 
-  useMaterial: {fileID: 2100000, guid: 0a60631258178c048a9e20d858d1708f, type: 2}
+  useMaterial: {fileID: 2100000, guid: 8a2dc082268b1e340a903ec7b11c6427, type: 2}

@@ -18,9 +18,9 @@ public class LineOfSightBase : MonoBehaviour
     private Dictionary<string, float> tagsDictionary = new();
 
     [Header("Visual Cone Settings")]
-    [SerializeField] [Range(0, 1000)] private float maxViewDistance = 10;
-    [SerializeField] [Range(0, 360)] public float horizontalAngle = 30;
-    [SerializeField] [Range(0, 180)] public float verticalAngle = 30;
+    [SerializeField][Range(0, 1000)] private float maxViewDistance = 10;
+    [SerializeField][Range(0, 360)] public float horizontalAngle = 30;
+    [SerializeField][Range(0, 180)] public float verticalAngle = 30;
     [SerializeField, Tooltip("Controls the level of detail of the mesh")]
     [Range(1, 10)]
     private int subDivision = 3;
@@ -29,69 +29,81 @@ public class LineOfSightBase : MonoBehaviour
 
     [Header("Shared Paramenters")]
     [Tooltip("Set a parameters object here to have it shared with other LOS objects.\nLeave empty to generate a new parameters object for this instance.")]
-    public LineOfSightParameters parameters;
+    private LineOfSightParameters parameters;
+
+    public LineOfSightParameters Parameters
+    {
+        get => parameters;
+        set
+        {
+            parameters = value;
+            UpdateViewDistance();
+            InitAllModules();
+        }
+    }
+
     private void Awake()
     {
         CreateLayerDictionary();
 
-        parameters = ScriptableObject.CreateInstance<LineOfSightParameters>();
-        parameters.root = gameObject;
-        parameters.tagsDictionary = tagsDictionary;
-
-
-    }
-    private void Start()
-    {
-        foreach (ISightModule module in GetComponents<ISightModule>())
-        {
-            if (modules.Contains(module)) return;
-            modules.Add(module);
-        }
+        Parameters = ScriptableObject.CreateInstance<LineOfSightParameters>();
+        Parameters.root = gameObject;
+        Parameters.tagsDictionary = tagsDictionary;
     }
     private void CreateLayerDictionary()
     {
         tagsDictionary.Clear();
         foreach (LayerDetails layer in detectionTags)
         {
-            if(layer == null) continue;
+            if (layer == null) continue;
             tagsDictionary.Add(layer.targetTag, layer.distance);
         }
+    }
+    private void OnValidate()
+    {
+        if (tagsDictionary.Count == 0)
+            CreateLayerDictionary();
+
+        if (Parameters == null) return;
+        if (root != null)
+            Parameters.root = root;
+
+        Parameters.maxViewDistance = maxViewDistance;
+        Parameters.tagsDictionary = tagsDictionary;
+        Parameters.enviromentLayers = enviromentLayers;
+        Parameters.horizontalAngle = horizontalAngle;
+        Parameters.verticalAngle = verticalAngle;
+        Parameters.subDivision = subDivision;
+    }
+    private void Start()
+    {
+        InitAllModules();
     }
 
 
     public void SetTagDetectionDistance(string targetTag, float distance)
     {
-        LayerDetails layer = detectionTags.SingleOrDefault(dl => dl.targetTag.Equals(targetTag));
-        if(layer == null)
-            detectionTags.Add(new LayerDetails(targetTag, distance));
+        string layer = tagsDictionary.Keys.SingleOrDefault(dl => dl.Equals(targetTag));
+        if (string.IsNullOrEmpty(layer))
+            tagsDictionary.Add(targetTag, distance);
         else
-            layer.distance = distance;
+            tagsDictionary[layer] = distance;
         UpdateViewDistance();
     }
 
     private void UpdateViewDistance()
     {
-        maxViewDistance = detectionTags.Select(dl => dl.distance).ToList().Max();
+        if (tagsDictionary.Count == 0) return;
+
+        maxViewDistance = tagsDictionary.Values.Select(dl => dl).ToList().Max();
     }
 
 
-    private void OnValidate()
-    {
-        CreateLayerDictionary();
-        if(root != null) 
-            parameters.root = root;
 
-        parameters.maxViewDistance = maxViewDistance;
-        parameters.tagsDictionary = tagsDictionary;
-        parameters.enviromentLayers = enviromentLayers;
-        parameters.horizontalAngle = horizontalAngle;
-        parameters.verticalAngle = verticalAngle;
-        parameters.subDivision = subDivision;
-    }
 
     public void Register(ISightModule newModule)
     {
-        if(modules.Contains(newModule)) return;
+        if (modules.Contains(newModule)) return;
         modules.Add(newModule);
     }
     [ContextMenu("Initialize All Modules")]
@@ -107,9 +119,9 @@ public class LineOfSightBase : MonoBehaviour
         }
 
         Debug.Log($"Initializing {modules.Count} modules");
-        foreach(ISightModule module in modules)
+        foreach (ISightModule module in modules)
         {
-            module.Initialize();
+            module.Initialize(Parameters);
         }
     }
 

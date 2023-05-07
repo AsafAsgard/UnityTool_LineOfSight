@@ -17,6 +17,8 @@ namespace LOS
     {
         public string FieldName { get; } = "LOS";
 
+        private LineOfSightParameters _parameters;
+
         [Header("Scan Options")]
         [SerializeField] private float scanInterval = 0.5f;
         private float timeSinceLastScan = Mathf.Infinity;
@@ -28,13 +30,11 @@ namespace LOS
         //[SerializeField] private float errorChance = 0f;
 
         [Header("Debug")]
-        [SerializeField , Tooltip("There lines will be visible in Game Mode!")] 
+        [SerializeField, Tooltip("There lines will be visible in Game Mode!")]
         public bool showTargetLines = true;
 
 
-
         private static List<GameObject> allEntities;
-        private LineOfSightParameters parameters;
         private bool isScanning = false;
 
         /// <summary>
@@ -47,45 +47,34 @@ namespace LOS
         /// </summary>
         private List<GameObject> poiTargets;
 
-        private LineOfSightBase lineOfSightBase;
-
-
         public List<GameObject> GetTargets() => poiTargets;
 
         private void Awake()
         {
-            lineOfSightBase = GetComponent<LineOfSightBase>();
-            lineOfSightBase.Register(this);
             isScanning = false;
             poiTargets = new();
             CreateLineMaterial();
         }
 
-        private void Start()
-        {
-            Initialize();
-        }
 
         [ContextMenu("Init")]
-        public void Initialize()
+        public void Initialize(LineOfSightParameters parameters)
         {
-            if (lineOfSightBase == null)
-                lineOfSightBase = GetComponent<LineOfSightBase>();
-            parameters = lineOfSightBase.parameters;
+            _parameters = parameters;
             allEntities = new();
-            if (parameters.tagsDictionary == null || parameters.tagsDictionary.Count == 0) return;
+            if (_parameters.tagsDictionary == null || _parameters.tagsDictionary.Count == 0) return;
             foreach (string tag in parameters.tagsDictionary.Keys)
             {
+                if (string.IsNullOrEmpty(tag)) continue;
                 GameObject[] items = GameObject.FindGameObjectsWithTag(tag);
                 if (items != null)
-                    allEntities.AddRange(items); 
+                    allEntities.AddRange(items);
             }
         }
 
 
         void Update()
         {
-            if (parameters == null) return;
             timeSinceLastScan += Time.deltaTime;
             if (isScanning || timeSinceLastScan < scanInterval) return;
 
@@ -107,15 +96,15 @@ namespace LOS
             isScanning = true;
             poiTargets.Clear();
             //Add targets by tag
-            if(allEntities != null && parameters.tagsDictionary != null)
+            if (allEntities != null && _parameters.tagsDictionary != null)
             {
                 for (int i = 0; i < allEntities.Count; i++)
                 {
                     GameObject entity = allEntities[i];
 
-                    if (entity == parameters.root) continue;
-                    if (!parameters.tagsDictionary.Keys.Contains(entity.tag)) continue;
-                    if (Vector3.Distance(transform.position, entity.transform.position) > parameters.tagsDictionary[entity.tag]) continue;
+                    if (entity == _parameters.root) continue;
+                    if (!_parameters.tagsDictionary.Keys.Contains(entity.tag)) continue;
+                    if (Vector3.Distance(transform.position, entity.transform.position) > _parameters.tagsDictionary[entity.tag]) continue;
                     if (TargetInSight(entity.transform))
                         poiTargets.Add(entity);
                 }
@@ -141,7 +130,7 @@ namespace LOS
         /// </remarks>
         /// <param name="targetPos"></param>
         /// <returns></returns>
-        private bool TargetInSight(Transform target)            
+        private bool TargetInSight(Transform target)
         {
             Vector3 targetPoistion;
             if (transform.TryGetComponent(out Collider col))
@@ -154,25 +143,25 @@ namespace LOS
             }
 
             //Can be seen
-            if (Physics.Linecast(transform.position, targetPoistion, parameters.enviromentLayers)) return false;
+            if (Physics.Linecast(transform.position, targetPoistion, _parameters.enviromentLayers)) return false;
 
             //Validate angles
             Quaternion angleToTarget = Quaternion.FromToRotation(transform.forward, targetPoistion - transform.position);
 
-            if(parameters.horizontalAngle < 180)
+            if (_parameters.horizontalAngle < 180)
             {
                 float targetHorizontalAngle = angleToTarget.eulerAngles.y;
                 if (targetHorizontalAngle > 180)
                     targetHorizontalAngle -= 360;
-                if (Mathf.Abs(targetHorizontalAngle) > parameters.horizontalAngle/2) return false;
+                if (Mathf.Abs(targetHorizontalAngle) > _parameters.horizontalAngle / 2) return false;
 
             }
-            if(parameters.verticalAngle < 90)
+            if (_parameters.verticalAngle < 90)
             {
                 float targetVerticalAngle = angleToTarget.eulerAngles.x;
                 if (targetVerticalAngle > 180)
                     targetVerticalAngle -= 360;
-                if (Mathf.Abs(targetVerticalAngle) > parameters.verticalAngle/2) return false;
+                if (Mathf.Abs(targetVerticalAngle) > _parameters.verticalAngle / 2) return false;
             }
             return true;
 
@@ -186,7 +175,7 @@ namespace LOS
                 return Vector3.zero;
             else
             {
-                float radius = noiseRadius * distanceToTarget / parameters.maxViewDistance;
+                float radius = noiseRadius * distanceToTarget / _parameters.maxViewDistance;
 
                 Vector2 noise = Random.insideUnitCircle * radius;
                 return new Vector3(noise.x, 0, noise.y); // should return the correct point

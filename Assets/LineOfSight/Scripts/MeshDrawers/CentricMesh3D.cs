@@ -10,7 +10,7 @@ namespace LOS
     {
         public override void Draw(in Vector3[,] meshPoints)
         {
-            if (mesh == null) return;
+            if (mesh == null || refTransform == null) return;
             mesh.Clear();
             int rows = meshPoints.GetLength(0);
             int columns = meshPoints.GetLength(1);

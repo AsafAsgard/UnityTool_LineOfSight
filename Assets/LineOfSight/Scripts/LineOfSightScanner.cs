@@ -11,7 +11,7 @@ namespace LOS
 {
     [ExecuteAlways]
     [RequireComponent(typeof(LineOfSightBase))]
-    public class LineOnSightScanner : MonoBehaviour, ISightModule
+    public class LineOfSightScanner : MonoBehaviour, ISightModule
     {
         public enum ScanErrorType { Fixed, Curve }
         public string FieldName { get; } = "LOS";

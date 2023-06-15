@@ -34,7 +34,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: -1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &6151041299820111651
 MeshFilter:
@@ -99,17 +99,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   root: {fileID: 0}
-  detectionTags:
-  - targetTag: Target
-    distance: 152
+  detectionTags: []
   enviromentLayers:
     serializedVersion: 2
     m_Bits: 64
-  maxViewDistance: 25
-  horizontalAngle: 94
-  verticalAngle: 47.7
-  subDivision: 6
-  parameters: {fileID: 0}
+  maxViewDistance: 10
+  horizontalAngle: 70
+  verticalAngle: 50
+  subDivision: 3
 --- !u!114 &8843383876631312662
 MonoBehaviour:
   m_ObjectHideFlags: 0
